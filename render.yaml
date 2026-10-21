@@ -1,0 +1,41 @@
+# Render Blueprint (https://render.com/docs/blueprint-spec)
+# Runs the Lucky Stone API as a free web service. The database stays on Aiven.
+services:
+  - type: web
+    name: luckystone-api
+    runtime: python
+    plan: free
+    # Use the Render region closest to your Aiven database
+    # (Aiven console -> your service -> Overview -> Cloud / region).
+    # Free web services can run in: oregon, ohio, virginia, frankfurt, singapore
+    region: frankfurt
+    buildCommand: pip install -r requirements.txt
+    # Render gives the port in $PORT. No --reload in production.
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      # Aiven PostgreSQL connection: Render asks for these when you create the
+      # Blueprint. They are never stored in this repo.
+      - key: POSTGRES_HOST
+        sync: false
+      - key: POSTGRES_USER
+        sync: false
+      - key: POSTGRES_PASSWORD
+        sync: false
+      - key: POSTGRES_PORT
+        value: "24018"
+      - key: POSTGRES_DB
+        value: defaultdb
+      # Aiven has no "postgres" database
+      - key: POSTGRES_MAINTENANCE_DB
+        value: defaultdb
+      # Random secret made by Render for signing login tokens
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "43200"
+      - key: GST_PERCENT
+        value: "3"
+      - key: CORS_ORIGINS
+        value: "*"
